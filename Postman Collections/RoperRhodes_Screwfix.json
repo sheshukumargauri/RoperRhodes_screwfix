@@ -1,0 +1,609 @@
+{
+	"info": {
+		"_postman_id": "15f9ef98-abea-43ef-9377-624ce19b52bd",
+		"name": "Virtualstock REST API for Screwfix Copy",
+		"description": "## Virtualstock is a modular SaaS platform that sits between retailers and their suppliers.\n\nSuppliers could be manufacturers, distributors, vendors or the retailer’s own warehouses or store network. In most cases these suppliers are fulfilling Dropship or marketplace orders for their client retailers.\n\nWhile Virtualstock has a range of modules and features, it has been predominantly deployed as a Dropship Solution.\n\nVirtualstock allows the supplier to efficiently share up-to-date order status, delivery status and stock availability information. Virtualstock also has Invoicing and Price Management modules.\n\nIn addition, Virtualstock can be used for rich product induction - where the supplier’s product data is validated against the retailer’s data model, before it is published to the retailer’s systems.\n\nFor a bit more background on what Virtualstock is, please visit [https://introducing.the-edge.io](https://introducing.the-edge.io).\n\n<img src=\"https://introducing.the-edge.io/img/IMAGE-what_is_the_edge.png\">\n\nThe purpose of the Virtualstock's REST API is to enable Retailers and Suppliers to create and manage their suppliers, products, stock availability, orders and order status . There are two methods for accessing the REST API:\n\n\\* Interactively – by directly using the REST API from a web browser or one of the widely available REST tools (e.g. Postman), and viewing the response;  \n\\* Programmatically – by using a program to call the API and manage the responses. [https://reqbin.com/](https://reqbin.com/) is a great resource to autogenerate the code you need to build in your programming language.\n\n# Overview\n\nIn order to begin using this API, you should first have been set up and have been provided with at least a test supplier have credentials for the API.\n\n# Authentication\n\nVirtualstock REST API is secured by HTTPS protocol, which is always enabled. HTTPS protocol uses HTTPS-within-TLS, so TLS v1.2 provides both confidentiality as well as integrity. REST API supports the Basic Auth method to authenticate the user with a **username** and **password**. On the basis of these credentials, a REST API user is also authorised to use certain API endpoints. Any HTTP traffic into the REST API will be redirected to use HTTPS.\n\nAs the administrator user of your organisation on Virtualstock, in your \"Users\" section, any user that has the \"Manager\" permission group can be used to make calls to the API. Or get in touch with your Customer Success representative to get this set up for you.\n\nIf you want to verify API calls via Postman, you can acquire the Postman pack here, and once downloaded, you can configure the collection to use Basic Authentication, and enter your username and password here. This will cascade to all calls within the collection.\n\n# Error Codes\n\nIn the event of an authentication error the REST API will return a 403 error.  \nIn the event of any other error due to REST API validation the response will be a 500 error, along with an error message. Examples of these:\n\n\\* {'An error occurred': \\[u'Most like caused by a duplicate order number'\\]}  \n\\* {'Cross Validation errors': \\['The given supplier is not one for which you may create orders'\\]}  \n\\* {'Cross Validation errors': \\['The shipments must include shipping_full_name'\\]}  \n\\* {'order_number': \\[u'This field is required.'\\]}  \n\\* Authentication credentials were not provided.\n\n# Throttling limit\n\nAll api requests are limited to 60 requests per minute. You will be given an error message informing you when you are next able to make another API call if you exceed these this limit.\n\n# Flat file CSV over SFTP API\n\nIf you are unable to integrate your applications with our REST API or have a previous integration to Virtualstock with our Flat file SFTP API that you would like to replicate for your integration with Screwfix, then please download our Flat file CSV over SFTP API documentation.\n\n**NOTE:** The Flat file CSV over SFTP API documentation is generic to all Virtualstock's Retailers. Please refer to our REST API documentation above to understand **requirements specific to Screwfix** and follow the same workflows as described above when using the CSV file exchanges to SFTP\n\n[DOWNLOAD FLAT FILE SFTP API DOCUMENTATION](https://drive.google.com/uc?export=download&id=1izax4s-PiDZh9qS7unrleRefrhD6HnVG)\n\n# REST API Endpoints\n\nListed below are all the endpoints that you are able to use for your Screwfix integration",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Order management",
+			"item": [
+				{
+					"name": "List Orders",
+					"id": "a5d6dbdd-46cb-4671-bd12-22033bc8cf59",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": {
+								"password": "{{password}}",
+								"username": "{{userid}}"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{v4-domain}}/restapi/v4/orders/?format=json",
+							"host": [
+								"{{v4-domain}}"
+							],
+							"path": [
+								"restapi",
+								"v4",
+								"orders",
+								""
+							],
+							"query": [
+								{
+									"key": "format",
+									"value": "json"
+								}
+							]
+						},
+						"description": "To fetch orders using the **limit** and **offset** parameters to scroll through pages of results links to each order URL.\n\n\"next\": \"[https://www.sandbox.the-edge.io/restapi/v4/orders?limit=10&offset=10\"](https://www.sandbox.the-edge.io/restapi/v4/orders?limit=10&offset=10)\n\n\"previous\": \"[https://wwww.sandbox.the-edge.io/restapi/v4/orders?limit=10\"](https://wwww.sandbox.the-edge.io/restapi/v4/orders?limit=10)\n\nAcquire a full list of orders.\n\nIn order to use these, you simply add the modifier after \"/orders/?\". If you wish to change these, you can use \"&\" between each modifier.\n\nYou can use additional modifiers which allow you to increase or decrease, or filter the list provided.\n\nIt is important to note that Screwfix have longer order numbers than may be usual. A sample order number is: **A10032999937-D20955996012**\n\n| parameter | description | example |\n| --- | --- | --- |\n| supplier_id | Filter orders by supplier unique identifier | &supplier_id=1 |\n| retailer_id | Filter orders by retailer unique identifier | &retailer_id=1 |\n| order_reference | Filter orders by order reference | &order_reference=xxx |\n| part_number | Filter orders that contain products with unique identifier | &part_number=SKU001 |\n| status | Filter orders by its status | &status=ORDER. See the list of statuses to filter by |\n\n| Status Key | Name on the UI |\n| --- | --- |\n| ORDER | New Order |\n| ORDER_ACK | Processing |\n| BACKORDER | Item(s) on Back Order |\n| DISPATCH | Dispatched |\n| CANCEL | Cancellation Requested |\n| CANCEL_ACK | Cancellation Acknowledged |\n| RMA | New Return |\n| RMA_AUTHORISED | Return Authorised |\n| RMA_COLLECTION_BOOKED | Return Collection Booked |\n| RMA_REJ | Return Declined |\n| RMA_EXC | Return Rejected |\n| RMA_REC | Return Approved |"
+					},
+					"response": [
+						{
+							"id": "ced6694f-aa8f-44e9-a0ba-3d52d02927ee",
+							"name": "List Orders",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{v4-domain}}/restapi/v4/orders/?format=json",
+									"host": [
+										"{{v4-domain}}"
+									],
+									"path": [
+										"restapi",
+										"v4",
+										"orders",
+										""
+									],
+									"query": [
+										{
+											"key": "format",
+											"value": "json"
+										}
+									]
+								}
+							},
+							"_postman_previewlanguage": "json",
+							"header": null,
+							"cookie": [],
+							"responseTime": null,
+							"body": "{\n    \"count\": 1,\n    \"next\": \"https://www.sandbox.the-edge.io/restapi/v4/orders?format=json&limit=X&offset=X\",\n    \"previous\": null,\n    \"results\": [\n        {\n            \"url\": \"https://www.sandbox.the-edge.io/restapi/v4/orders/259313/\",\n            \"retailer\": \"https://www.sandbox.the-edge.io/restapi/v4/customers/13/\",\n            \"order_reference\": \"TESTORDERNUMBER\",\n            \"order_date\": \"2021-02-23T10:41:59\",\n            \"status\": \"ORDER_ACK\",\n            \"purchase_order_reference\": \"PO0001\",\n            \"end_user_purchase_order_reference\": \"USER_PO0002\",\n            \"additional_order_reference\": \"aditional_ref001\",\n            \"comment\": \"This is a big order\",\n            \"test_flag\": false,\n            \"supplier\": \"https://www.sandbox.the-edge.io/restapi/v4/suppliers/1569/\",\n            \"items\": [\n                {\n                    \"url\": \"https://www.sandbox.the-edge.io/restapi/v4/items/279610/\",\n                    \"part_number\": \"RETAILERSKU0001\",\n                    \"retailer_sku_reference\": \"RETAILERSKU0001\",\n                    \"supplier_sku_reference\": \"EXERT00001\",\n                    \"line_reference\": \"123\",\n                    \"quantity\": 2,\n                    \"name\": \"Lenovo IdeaPad 3 14ADA05 14 Inch FHD Laptop - Silver\",\n                    \"description\": \"Spot check line item\",\n                    \"status\": \"ORDER_ACK\",\n                    \"unit_cost_price\": \"5.00\",\n                    \"subtotal\": \"10.00\",\n                    \"tax\": \"2.00\",\n                    \"tax_rate\": \"20.00\",\n                    \"total\": \"12.00\",\n                    \"promised_date\": \"2021-03-20T00:00:00\",\n                    \"retailer_additional_reference\": \"Addtional Ref 1\"\n                }\n            ],\n            \"currency_code\": \"GBP\",\n            \"subtotal\": \"10.00\",\n            \"tax\": \"2.00\",\n            \"total\": \"12.00\",\n            \"shipping_address\": {\n                \"country\": \"GB\",\n                \"line_1\": \"London Road\",\n                \"line_2\": \"Flat x\",\n                \"city\": \"Reading\",\n                \"postal_code\": \"RG1 XXX\",\n                \"state\": \"Berkshire\",\n                \"phone\": \"+44 088 333 222\",\n                \"full_name\": \"Ben DeSilva\",\n                \"email\": \"test@test.com\"\n            }\n        }\n    ]\n}"
+						}
+					]
+				},
+				{
+					"name": "View Order details",
+					"id": "3e944d72-87af-4e9b-80c9-0fd19fab0d80",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{v4-domain}}/restapi/v4/orders/ORDER_URI/?format=json",
+							"host": [
+								"{{v4-domain}}"
+							],
+							"path": [
+								"restapi",
+								"v4",
+								"orders",
+								"ORDER_URI",
+								""
+							],
+							"query": [
+								{
+									"key": "format",
+									"value": "json"
+								}
+							]
+						},
+						"description": "This call allows you to retrieve information for a specific order, once you already know the Restful ID. This restful ID can be acquired via the \"Retrieve Orders\" call, or cached whenever you call the \"Create an order\" for generating any new order\n\nIn order to successfully post a message, you will need to replace \"ORDER_URI\" with the value that you wish to search for.\n\nPLEASE NOTE: Screwfix do not always hold the supplier SKU so there will be occasions in which the supplier SKU is not sent. It is therefore highly advisable that the Screwfix codes are held as the main indentifier for the product on the order, and a lookup is used for your internal references."
+					},
+					"response": []
+				},
+				{
+					"name": "Acknowledge an order",
+					"id": "01cbc58f-9e9b-480a-9e82-420fab5c6635",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\"items\":\n\t[\n\t{\n\t\"part_number\": \"572JJ\",\n\t\"line_ref\": \"ci247922457387\",\n\t\"quantity\": 5,\n\t\"sub_status\": \"Booked\",\n\t\"supplier_dispatch_date\": \"2019-10-10T12:00:00\",\n\t\"supplier_delivery_date\":\"2019-10-10T12:00:00\",\n\t},\n\t{\n\t\"part_number\": \"461KJ\",\n\t\"line_ref\": \"ci247922493997\",\n\t\"quantity\": 1,\n\t\"sub_status\": \"Booked\",\n\t\"supplier_dispatch_date\": \"2019-10-10T12:00:00\",\n\t\"supplier_delivery_date\":\"2019-10-10T12:00:00\",\n\t}\n\t]\n}\n"
+						},
+						"url": {
+							"raw": "{{v4-domain}}/restapi/v4/orders/ORDER_URI/acknowledge/?format=json",
+							"host": [
+								"{{v4-domain}}"
+							],
+							"path": [
+								"restapi",
+								"v4",
+								"orders",
+								"ORDER_URI",
+								"acknowledge",
+								""
+							],
+							"query": [
+								{
+									"key": "format",
+									"value": "json"
+								}
+							]
+						},
+						"description": "# Introduction\n\nThis call will allow you to acknowledge an order. The purpose of this is to allow suppliers to acknowledge orders in an automated fashion, however it can be used by retail users, should they wish to acknowledge on behalf of their suppliers (with prior consent), or if they are fulfilling their own orders (e.g., sending orders to their own warehouse)\n\n# Attribute Summary\n\n| Field | Required | Field type | Limit | Description | Sample content |\n| --- | --- | --- | --- | --- | --- |\n| part_number | Y | Text | 255 | EAN, GTIN or other Product SKU identifier | 573KJ |\n| line_ref | Y | Text | 100 | Retailers unique identifier for the line within and order | ci247922457387 |\n| quantity | Y | Numeric | None | The ordered quantity | 1 |\n| sub_status | Y | Text | 100 | Screwfix require \"Pending\" and \"Booked\" as substatuses. | Pending, Booked |\n| supplier_dispatch_date | N | DateTime | 19 | Date of the expected Supplier Dispatch Date | 2018-07-12T08:00:00 |\n| supplier_delivery_date | N | DateTime | 19 | Date of the expected Supplier Delivery Date | 2018-07-12T08:00:00 |"
+					},
+					"response": []
+				},
+				{
+					"name": "Acknowledge a Cancellation",
+					"id": "248caf83-c6ef-4361-914d-45b31aaa06b9",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"items\":\n\t[\n\t\t{\n\t\t\t\"part_number\": \"PartNumber_02\",\n\t\t\t\"line_ref\": \"100002\",\n\t\t\t\"quantity\": 10,\n\t\t\t\"comment\": \"I accept\"\n\t\t},\n\t\t{\n\t\t\t\"part_number\": \"PartNumber_01\",\n\t\t\t\"line_ref\": \"100001\",\n\t\t\t\"quantity\": 5,\n\t\t\t\"comment\": \"I accept but i'm not happy about it\"\t\t\t\n\t\t}\n\t]\n}"
+						},
+						"url": {
+							"raw": "{{v4-domain}}/restapi/v4/orders/ORDER_URI/cancel_acknowledge/?format=json",
+							"host": [
+								"{{v4-domain}}"
+							],
+							"path": [
+								"restapi",
+								"v4",
+								"orders",
+								"ORDER_URI",
+								"cancel_acknowledge",
+								""
+							],
+							"query": [
+								{
+									"key": "format",
+									"value": "json"
+								}
+							]
+						},
+						"description": "# Introduction\n\nThis call will allow you to acknowledge a cancellation for an order. The purpose of this is to allow suppliers to acknowledge orders in an automated fashion, however it can be used by retail users, should they wish to acknowledge on behalf of their suppliers (with prior consent), or if they are fulfilling their own orders (e.g., sending orders to their own warehouse)\n\n# Attribute Summary\n\n|Field|Required|Field type|Limit|Description|Sample content|\n|----|----|----|----|----|----|\n|part_number|Y|Text|255|EAN, GTIN or other Product SKU identifier|1004613|\n|line_ref|Y|Text|100|Retailers unique identifier for the line within and order|100013292|\n|quantity|Y|Numeric|None|The ordered quantity|1|\n|reason_code|Y|Text|255|Available from a list of reason codes, see Appendix A|Customer delivery date wrong|\n|comment|N|Text|255|Additional information that you wish to share with the client|Item may require fitting|"
+					},
+					"response": []
+				},
+				{
+					"name": "Backorder an order",
+					"id": "423814b6-d2e0-4cd7-8288-c4175c69cd56",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\"items\":\n\t[\n\t{\n\t\"part_number\": \"583KH\",\n\t\"line_ref\": \"ci247922457387\",\n\t\"quantity\": 10,\n\t\"sub_status\": \"Pending\",\n\t\"expected_dispatch_date\": \"2019-10-20T12:00:00\",\n\t\"supplier_dispatch_date\": \"2019-10-20T12:00:00\",\n\t\"supplier_delivery_date\": \"2019-10-23T12:00:00\",\n\t},\n\t{\n\t\"part_number\": \"522KH\",\n\t\"line_ref\": \"ci246972459687\",\n\t\"quantity\": 40,\n\t\"sub_status\": \"Pending\",\n\t\"supplier_dispatch_date\": \"2019-10-10T12:00:00\",\n\t\"supplier_delivery_date\":\"2019-10-10T12:00:00\",\n\t}\n\t]\n}\n"
+						},
+						"url": {
+							"raw": "{{v4-domain}}/restapi/v4/orders/ORDER_URI/backorder/?format=json",
+							"host": [
+								"{{v4-domain}}"
+							],
+							"path": [
+								"restapi",
+								"v4",
+								"orders",
+								"ORDER_URI",
+								"backorder",
+								""
+							],
+							"query": [
+								{
+									"key": "format",
+									"value": "json"
+								}
+							]
+						},
+						"description": "# Introduction\n\nThis call will allow you to back-order an order. The purpose of this is to allow suppliers to acknowledge orders in an automated fashion, however it can be used by retail users, should they wish to acknowledge on behalf of their suppliers (with prior consent), or if they are fulfilling their own orders (e.g., sending orders to their own warehouse)\n\n# Attribute Summary\n\n| Field | Required | Field type | Limit | Description | Sample content |\n| --- | --- | --- | --- | --- | --- |\n| part_number | Y | Text | 255 | EAN, GTIN or other Product SKU identifier | 584JK |\n| line_ref | Y | Text | 100 | Retailers unique identifier for the line within and order | ci247922457387 |\n| quantity | Y | Numeric | None | The ordered quantity | 1 |\n| sub_status | Y | Text | 100 | Sub-Statuses are based on the clients requirements, they will be a static list | Pending |\n| supplier_dispatch_date | Y | DateTime | 19 | Date of the expected Supplier Dispatch Date | 2018-07-12T08:00:00 |"
+					},
+					"response": []
+				},
+				{
+					"name": "Dispatch an order",
+					"id": "5859be88-04cc-4d0c-bd43-8c0c7ffb2a2e",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"items\":\n\t[\n\t\t{\n\t\t\t\"part_number\": \"599KF\",\n\t\t\t\"line_ref\": \"ci259303004900\",\n\t\t\t\"quantity\": 10,\n\t\t\t\"supplier_dispatch_date\": \"2019-10-10\",\n\t\t\t\"supplier_delivery_date\": \"2019-10-12\",\n\t\t\t\"tracking_number\": 1123581321,\n\t\t\t\"carrier\": \"fedex\"\n\t\t},\n\t\t{\n\t\t\t\"part_number\": \"634KJ\",\n\t\t\t\"line_ref\": \"ci259303224979\",\n\t\t\t\"quantity\": 5,\n\t\t\t\"supplier_dispatch_date\": \"2019-10-10\",\n\t\t\t\"supplier_delivery_date\": \"2019-10-12\",\n\t\t\t\"tracking_number\": 22481220,\n\t\t\t\"carrier\": \"royal-mail\"\t\n\t\t}\n\t]\n}"
+						},
+						"url": {
+							"raw": "{{v4-domain}}/restapi/v4/orders/ORDER_URI/dispatch/?format=json",
+							"host": [
+								"{{v4-domain}}"
+							],
+							"path": [
+								"restapi",
+								"v4",
+								"orders",
+								"ORDER_URI",
+								"dispatch",
+								""
+							],
+							"query": [
+								{
+									"key": "format",
+									"value": "json"
+								}
+							]
+						},
+						"description": "This call will allow you to Dispatch an order. The purpose of this is to allow suppliers to acknowledge orders in an automated fashion, however it can be used by retail users, should they wish to dispatch on behalf of their suppliers (with prior consent), or if they are fulfilling their own orders (e.g., sending orders to their own warehouse).\n\n> 💡 Tracked carriers require the use of both **carrier slug** values and valid tracking numbers to work. If you use an untracked service then the tracking number is not necessary. If you use a tracked carrier and don't provide a tracking number the API will error.\n\n> 💡 Screwfix have a workflow that requires you to send an acknowledgement with a \"**Booked**\" sub status and a date **before** you can dispatch the order\n\n# Attribute Summary\n\n| Field | Required | Field type | Limit | Description | Sample content |\n| --- | --- | --- | --- | --- | --- |\n| part_number | Y | Text | 255 | EAN, GTIN or other Product SKU identifier | 622KL |\n| line_ref | Y | Text | 100 | Retailers unique identifier for the line within and order | ci247922457387 |\n| quantity | Y | Numeric | None | The ordered quantity | 1 |\n| carrier | Y | Text | 255 | The carrier \"slug\" as listed on Virtualstock. e.g if the Carrier is DPD then the \"slug\" is \"dpd-uk\" | dpd-uk  <br>  <br>(ask your support team for the list of \"slug\" values for your carriers) |\n| supplier_dispatch_date | Y | Date | 10 | Date of the expected Supplier Dispatch Date | 2020-05-22 |\n| tracking_number | Y | Text | 100 | Tracking Number for the carrier selected | 34098675738421 |\n| tracking_url | N | Text | 255 | Tracking URL associated to the carrier selected | [https://track.dhlparcel.co.uk/](https://track.dhlparcel.co.uk/) |"
+					},
+					"response": []
+				}
+			],
+			"id": "aa07dd83-ac0d-4b82-9c6d-e802e2c3bc38",
+			"description": "| Main Order Status | Status Key | Description |\n| --- | --- | --- |\n| New Order | ORDER | Orders that have been sent to the supplier but as yet have not been acknowledged by the Supplier |\n| Processing | ORDER_ACK | Orders the supplier has acknowledged and is actively being processed by the Supplier |\n| Item(s) on Backorder | BACKORDER | Orders that the Supplier can not fulfill by the expected delivery date, and they have provided a new expected delivery date that they will be able to fulfill the order |\n| Cancellation Requested | CANCEL | Orders that the retailer has requested a cancellation for |\n| Cancellation Acknowledged | CANCEL_ACK | Orders that the Supplier has confirmed is now Cancelled |\n| Dispatched | DISPATCH | Orders that have a confirmed delivery date and have been picked up by the Suppliers delivery Service or Carrier |\n| Return Request | RMA | A previously Dispatched order, that has now been initiated as a Return Order |\n| Return Authorised | RMA_AUTHORISED | The supplier has confirmed they will process this return |\n| Return Declined | RMA_REJ | A Returned Order that the Supplier would not be able to process |\n| Return Collection Booked | RMA_COLLECTION_BOOKED | The supplier has booked a collection date with the Courier |\n| Return Approved | RMA_REC | The supplier has received the returned goods and they have approved the items are in a condition that can be refunded |\n| Return Rejected | RMA_EXC | The supplier has received the returned goods but the items are not in a condition that can be refunded |\n\n| Custom Secondary Order Statuses | Description |\n| --- | --- |\n| Processing > Pending | \"Pending\" is just an example, but as a retailer you can configure any custom sub statuses below Processing. Other examples include \"Delivery Booked\",\"Delivery Deferred\", \"Materials ordered\", or anything else that gives the retailer a better view on how the order is progressing |\n| Item(s) on Backorder > Out of Stock | \"Out of Stock\" is just an example, but as a retailer you can configure any custom sub statuses below \"Item(s) on Backorder\". Other examples include \"Information Required\",\"Discontinued\", \"Manufacturing Problem\", or anything else that gives the retailer a better view as to why the order is going to be late |\n\n| Common Workflows |\n| --- |\n| New Order > Processing > Dispatched(Delivered) |\n| New Order > Processing > Item(s) on Backorder > Dispatched(Delivered) |\n| New Order > Processing > Item(s) on Backorder > Cancellation Requested > Cancellation Acknowledged |\n| New Order > Processing > Cancellation Requested > Cancellation Acknowledged |\n| New Order > Processing > Cancellation Requested > Dispatched(Delivered) |\n| \\--- |\n| Dispatched(Delivered) > Return Request > Return Authorised > Return Collection Booked > Return Approved |\n| Dispatched(Delivered) > Return Request > Return Declined |\n| Dispatched(Delivered) > Return Request > Return Authorised > Return Collection Booked > Return Rejected |\n\n| Tracking statuses | Status Key | Description |\n| --- | --- | --- |\n| Pending | PENDING | New shipments added that are pending to track, or new shipments without tracking information available yet. |\n| Info Recieved | INFORECIEVED | The carrier has received the tracking number and awaits further updates. |\n| In Transit | INTRANSIT | Carrier has accepted or picked up shipment from the shipper. The shipment is on the way. |\n| Out for Delivery | OUTFORDELIVERY | Carrier is about to deliver the shipment, or it is ready to be picked up. |\n| Failed Attempt | FAILEDATTEMPT | Carrier attempted to deliver but failed, and usually leaves a notice and will try to deliver again. |\n| Delivery Exception | EXCEPTION | Undelivered or any shipping exceptions. Used by Virtualstock if there was a system failure working with this courier API in some way, or can be set manually by the supplier where required. |\n| Tracking Exception | TRACKINGEXCEPTION | There has not had an update from the Carrier in 48 hours |\n| Delivered | DELIVERED | The shipment was delivered successfully. |\n| Untracked | UNTRACKED | There are no further tracking updates |",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "98e7c0f8-94c0-4cff-ab22-d6691e9d2abf",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "13c67b80-1509-4954-9618-16a6651d3930",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Product & Stock managment",
+			"item": [
+				{
+					"name": "List products",
+					"id": "38cafb49-1ace-4d1f-892e-9afd11314e60",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{v4-domain}}/api/v4/products/?format=json",
+							"host": [
+								"{{v4-domain}}"
+							],
+							"path": [
+								"api",
+								"v4",
+								"products",
+								""
+							],
+							"query": [
+								{
+									"key": "format",
+									"value": "json"
+								}
+							]
+						},
+						"description": "You may get multiple results for a part number search, as there may be more than one supplier with the same part number on Virtualstock. Part numbers are unique by suppliers on Virtualstock."
+					},
+					"response": []
+				},
+				{
+					"name": "Retrieve a product",
+					"id": "4d3a7d43-c7e9-4747-8325-c80259e0db4c",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{v4-domain}}/api/v4/products/{REST_ID}?format=json",
+							"host": [
+								"{{v4-domain}}"
+							],
+							"path": [
+								"api",
+								"v4",
+								"products",
+								"{REST_ID}"
+							],
+							"query": [
+								{
+									"key": "format",
+									"value": "json"
+								}
+							]
+						},
+						"description": "You may get multiple results for a part number search, as there may be more than one supplier with the same part number on Virtualstock. Part numbers are unique by suppliers on Virtualstock."
+					},
+					"response": [
+						{
+							"id": "c0d996cb-34e7-4c0b-b166-f06ba6e555ce",
+							"name": "Retrieve a product",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"url\": \"https://www.sandbox.the-edge.io/api/v4/products/{REST_ID}/\",\n    \"part_number\": \"1096070507\",\n    \"category\": \"https://www.sandbox.the-edge.io/api/v4/categories/{REST_ID}/\",\n    \"client\": \"https://www.sandbox.the-edge.io/api/v4/clients/{REST_ID}/\",\n    \"supplier\": \"https://www.sandbox.the-edge.io/api/v4/suppliers/{REST_ID}/\",\n    \"data\": {\n        \"low_stock\": \"\",\n        \"discontinued\": \"False\",\n        \"lead_time_days\": \"7\",\n        \"inv_last_updated\": \"11/05/2022 00:09\",\n        \"stock_updated_at\": \"2022-05-10T16:10:28\",\n        \"supplier_part_number\": \"AC1040\"\n        // List of fields is defined by the retailers data model configuration\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://www.the-edge.io/api/v4/products/{REST_ID}?format=json",
+									"protocol": "https",
+									"host": [
+										"www",
+										"the-edge",
+										"io"
+									],
+									"path": [
+										"api",
+										"v4",
+										"products",
+										"{REST_ID}"
+									],
+									"query": [
+										{
+											"key": "format",
+											"value": "json"
+										}
+									]
+								}
+							},
+							"_postman_previewlanguage": "Text",
+							"header": null,
+							"cookie": [],
+							"responseTime": null,
+							"body": null
+						}
+					]
+				},
+				{
+					"name": "Retrieve a product by part number",
+					"id": "2595bf65-0eaa-40ab-9381-7a968bc6ce60",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{v4-domain}}/api/v4/products/?part_number={SKU123}",
+							"host": [
+								"{{v4-domain}}"
+							],
+							"path": [
+								"api",
+								"v4",
+								"products",
+								""
+							],
+							"query": [
+								{
+									"key": "part_number",
+									"value": "{SKU123}"
+								}
+							]
+						},
+						"description": "You may get multiple results for a part number search, as there may be more than one supplier with the same part number on Virtualstock. Part numbers are unique by suppliers on Virtualstock."
+					},
+					"response": []
+				},
+				{
+					"name": "Update a product",
+					"id": "57c071ca-d7dc-4685-b309-191e5d9adb08",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"data\": {\n         \"free_stock\":100, // The latest stock level from your systems\n         \"backorder_date\": \"2022-01-03\" // Only required if free_stock us 0 \n    }\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{v4-domain}}/api/v4/products/{PRODUCT_REST_ID}/?format=json",
+							"host": [
+								"{{v4-domain}}"
+							],
+							"path": [
+								"api",
+								"v4",
+								"products",
+								"{PRODUCT_REST_ID}",
+								""
+							],
+							"query": [
+								{
+									"key": "format",
+									"value": "json"
+								}
+							]
+						},
+						"description": "Use the `PATCH` method to amend any field on the product data model.\n\nNOTE: Virtualstock will \"lock\" the product when it's busy updating the Retailers systems, i.e when the product is in a status of `Publishing`. Once complete the product will unlock into a `Published` state. Your integration needs to keep retrying every few minutes if the stock update receives a `409 conflict` response which produces the error below\n\n`{   \"detail\": \"Can't update a product which is in a publishing status.\"   }`\n\nScrewfix use the following fields in their stock data model:\n\n`free_stock` The latest stock level from your systems\n\n`backorder_date` Only required if free_stock us 0\n\nNote: {PRODUCT_REST_ID} is the ID fetched from a search on the \"Retrieve a product\" endpoint and is **not** the `part_number`"
+					},
+					"response": [
+						{
+							"id": "457d26b4-66bf-446d-a58c-4314cef20899",
+							"name": "Update a product",
+							"originalRequest": {
+								"method": "PATCH",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"data\": {\n         \"free_stock\":100, // The latest stock level from your systems\n         \"backorder_date\": \"2022-01-03\" // Only required if free_stock us 0 \n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://www.the-edge.io/api/v4/products/{PRODUCT_REST_ID}/?format=json",
+									"protocol": "https",
+									"host": [
+										"www",
+										"the-edge",
+										"io"
+									],
+									"path": [
+										"api",
+										"v4",
+										"products",
+										"{PRODUCT_REST_ID}",
+										""
+									],
+									"query": [
+										{
+											"key": "format",
+											"value": "json"
+										}
+									]
+								}
+							},
+							"_postman_previewlanguage": "Text",
+							"header": null,
+							"cookie": [],
+							"responseTime": null,
+							"body": null
+						}
+					]
+				}
+			],
+			"id": "6531af41-7b41-4022-b56a-93574c96c991"
+		}
+	],
+	"auth": {
+		"type": "basic",
+		"basic": {
+			"password": "{{password}}",
+			"username": "{{userid}}"
+		}
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "57b40017-f289-4522-850e-d058ca79a707",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "b58e1f5b-239c-4f39-a455-99c0c03db4b0",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "v4-domain",
+			"value": "https://www.sandbox.the-edge.io",
+			"type": "string"
+		}
+	]
+}
